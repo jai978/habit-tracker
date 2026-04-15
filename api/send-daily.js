@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   // ISO date in the configured timezone
   const date = new Date().toLocaleDateString('en-CA', { timeZone: tz })
 
-  const checkinUrl = `${appUrl}/api/checkin?date=${date}`
+  const checkinUrl = `${appUrl}/api/daily?date=${date}`
   const habitList = habits.map(h => `• ${h.name}`).join('\n')
 
   const html = `<!DOCTYPE html>
