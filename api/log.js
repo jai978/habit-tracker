@@ -45,7 +45,8 @@ export default async function handler(req, res) {
     return res.status(500).send(page('Error', 'Could not save your rating. Please try again.', '#ef4444'))
   }
 
-  const habitName = name ? decodeURIComponent(name) : 'Habit'
+  const rawName = name ? decodeURIComponent(name) : 'Habit'
+  const habitName = rawName.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
   const label = STAR_LABELS[stars]
   const emoji = STAR_EMOJIS[stars]
 

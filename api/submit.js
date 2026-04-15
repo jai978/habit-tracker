@@ -23,6 +23,20 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing date or ratings' })
   }
 
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: 'Invalid date format' })
+  }
+
+  const invalid = ratings.find(r =>
+    !r.habit_id ||
+    !Number.isInteger(r.stars) ||
+    r.stars < 0 ||
+    r.stars > 5
+  )
+  if (invalid) {
+    return res.status(400).json({ error: 'Invalid rating value' })
+  }
+
   const rows = ratings.map(({ habit_id, stars }) => ({
     date,
     habit_id,

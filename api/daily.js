@@ -47,8 +47,9 @@ export default async function handler(req, res) {
     })
   })()
 
-  const habitsJson = JSON.stringify(habits)
-  const existingJson = JSON.stringify(existing)
+  // Escape closing script tags to prevent XSS via habit names
+  const habitsJson = JSON.stringify(habits).replace(/</g, '\\u003c')
+  const existingJson = JSON.stringify(existing).replace(/</g, '\\u003c')
 
   const html = `<!DOCTYPE html>
 <html lang="en">
