@@ -1,0 +1,39 @@
+/**
+ * Saves all habit ratings for a given date in one request.
+ * POST /api/submit
+ * Body: { date: "2026-04-16", ratings: [{ habit_id, stars }] }
+ */
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  const { date, ratings } = req.body
+
+  if (!date || !Array.isArray(ratings) || ratings.length === 0) {
+    return res.status(400).json({ error: 'Missing date or ratings' })
+  }
+
+  const rows = ratings.map(({ habit_id, stars }) => ({
+    date,
+    habit_id,
+    stars,
+    note: null,
+  }))
+
+  const { error } = await supabase
+    .from('habit_logs')
+    .upsert(rows, { onConflict: 'date,habit_id' })
+
+  if (error) {
+    console.error('Supabase error:', error)
+    return res.status(500).json({ error: 'Failed to save' })
+  }
+
+  return res.status(200).json({ message: `Saved ${rows.length} habits for ${date}` })
+}

@@ -50,25 +50,8 @@ export default async function handler(req, res) {
   // ISO date in the configured timezone
   const date = new Date().toLocaleDateString('en-CA', { timeZone: tz })
 
-  // Build one row of buttons per habit
-  const habitRows = habits.map(habit => {
-    const encodedName = encodeURIComponent(habit.name)
-
-    const buttons = [0, 1, 2, 3, 4, 5].map(stars => {
-      const url = `${appUrl}/api/log?habit_id=${habit.id}&stars=${stars}&date=${date}&name=${encodedName}`
-      const label = stars === 0 ? 'Skip' : '★'.repeat(stars)
-      const bg = stars === 0 ? '#374151' : '#1d4ed8'
-      return `<a href="${url}" target="_blank" style="display:inline-block;margin:0 4px;padding:8px 14px;background:${bg};color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600">${label}</a>`
-    }).join('')
-
-    return `
-      <tr>
-        <td style="padding:14px 0 6px;color:#f9fafb;font-size:16px;font-weight:600">${habit.name}</td>
-      </tr>
-      <tr>
-        <td style="padding-bottom:20px">${buttons}</td>
-      </tr>`
-  }).join('')
+  const checkinUrl = `${appUrl}/api/checkin?date=${date}`
+  const habitList = habits.map(h => `• ${h.name}`).join('\n')
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -82,20 +65,23 @@ export default async function handler(req, res) {
             <td style="color:#9ca3af;font-size:13px;padding-bottom:4px">DAILY CHECK-IN</td>
           </tr>
           <tr>
-            <td style="color:#f9fafb;font-size:22px;font-weight:700;padding-bottom:24px;border-bottom:1px solid #374151">${today}</td>
+            <td style="color:#f9fafb;font-size:22px;font-weight:700;padding-bottom:20px">${today}</td>
           </tr>
           <tr>
-            <td style="padding-top:8px">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                ${habitRows}
-              </table>
+            <td style="color:#9ca3af;font-size:14px;line-height:1.8;padding-bottom:28px">
+              ${habits.map(h => h.name).join('<br/>')}
             </td>
           </tr>
           <tr>
-            <td style="padding-top:16px;border-top:1px solid #374151">
-              <p style="color:#6b7280;font-size:12px;margin:12px 0 0">
-                ★ = 1 poor &nbsp;·&nbsp; ★★ = 2 &nbsp;·&nbsp; ★★★ = 3 okay &nbsp;·&nbsp; ★★★★ = 4 good &nbsp;·&nbsp; ★★★★★ = 5 great
-              </p>
+            <td>
+              <a href="${checkinUrl}" style="display:inline-block;padding:14px 32px;background:#1d4ed8;color:#fff;text-decoration:none;border-radius:10px;font-size:16px;font-weight:700">
+                Do Today's Check-in →
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-top:24px;color:#4b5563;font-size:12px">
+              Tap the button, rate each habit, then hit Save. Takes about 10 seconds.
             </td>
           </tr>
         </table>
@@ -105,14 +91,7 @@ export default async function handler(req, res) {
 </body>
 </html>`
 
-  const text = habits.map(habit => {
-    const links = [0,1,2,3,4,5].map(stars => {
-      const label = stars === 0 ? 'Skip' : `${stars}★`
-      const url = `${appUrl}/api/log?habit_id=${habit.id}&stars=${stars}&date=${date}&name=${encodeURIComponent(habit.name)}`
-      return `  ${label}: ${url}`
-    }).join('\n')
-    return `${habit.name}\n${links}`
-  }).join('\n\n')
+  const text = `Daily habit check-in for ${today}\n\nHabits today:\n${habitList}\n\nOpen your check-in here:\n${checkinUrl}`
 
   const { error: sendError } = await resend.emails.send({
     from: process.env.FROM_EMAIL,
