@@ -11,18 +11,34 @@ function normalize(rows) {
   return out
 }
 
+async function fetchLogs() {
+  const { data, error } = await supabase
+    .from('habit_logs')
+    .select('date, habit_id, stars, note')
+  return error ? null : normalize(data)
+}
+
 export function useLogs() {
   const [logs, setLogs] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('habit_logs')
-      .select('date, habit_id, stars, note')
-      .then(({ data, error }) => {
-        if (!error && data) setLogs(normalize(data))
-        setLoading(false)
-      })
+    fetchLogs().then(data => {
+      if (data) setLogs(data)
+      setLoading(false)
+    })
+  }, [])
+
+  // Re-fetch when the user switches back to this tab
+  // so email check-ins are picked up automatically
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') {
+        fetchLogs().then(data => { if (data) setLogs(data) })
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
 
   function getLogForDate(date) {
