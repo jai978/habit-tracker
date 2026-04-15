@@ -15,6 +15,11 @@ dist-ssr
 # Claude Code local settings
 .claude/settings.local.json
 
+# Environment variables (real values — never commit these)
+.env
+.env.local
+.env.production
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
