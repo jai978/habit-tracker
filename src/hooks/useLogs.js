@@ -6,7 +6,7 @@ function normalize(rows) {
   const out = {}
   for (const row of rows) {
     if (!out[row.date]) out[row.date] = {}
-    out[row.date][row.habit_id] = { stars: row.stars, note: row.note ?? '' }
+    out[row.date][row.habit_id] = { stars: row.stars, rating: row.stars, note: row.note ?? '' }
   }
   return out
 }
@@ -45,12 +45,12 @@ export function useLogs() {
     return logs[date] || {}
   }
 
-  // dayLogs = { [habitId]: { stars, note } }
+  // dayLogs = { [habitId]: { rating, note } } (rating and stars are the same value)
   async function saveDay(date, dayLogs) {
-    const rows = Object.entries(dayLogs).map(([habit_id, { stars, note }]) => ({
+    const rows = Object.entries(dayLogs).map(([habit_id, { rating, stars, note }]) => ({
       date,
       habit_id,
-      stars,
+      stars: rating ?? stars ?? 0,
       note: note || null,
     }))
 
@@ -58,7 +58,15 @@ export function useLogs() {
       .from('habit_logs')
       .upsert(rows, { onConflict: 'date,habit_id' })
 
-    if (!error) setLogs(prev => ({ ...prev, [date]: dayLogs }))
+    // Normalise local state so both rating and stars are always set
+    if (!error) {
+      const normalised = {}
+      for (const [id, { rating, stars, note }] of Object.entries(dayLogs)) {
+        const value = rating ?? stars ?? 0
+        normalised[id] = { rating: value, stars: value, note: note ?? '' }
+      }
+      setLogs(prev => ({ ...prev, [date]: normalised }))
+    }
   }
 
   async function deleteHabitLogs(habitId) {
