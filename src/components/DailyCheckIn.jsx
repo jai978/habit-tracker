@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useHabitContext } from '../context/HabitContext.jsx'
 import { getTodayISO, formatDisplay } from '../utils/dates.js'
+import { calculateStreak } from '../utils/streaks.js'
 import HabitRatingRow from './HabitRatingRow.jsx'
 
 export default function DailyCheckIn({ onManage }) {
-  const { habits, getLogForDate, saveDay } = useHabitContext()
+  const { habits, logs, getLogForDate, saveDay } = useHabitContext()
   const today = getTodayISO()
   const [dayRatings, setDayRatings] = useState({})
   const [saved, setSaved] = useState(false)
@@ -58,6 +59,7 @@ export default function DailyCheckIn({ onManage }) {
             habit={habit}
             rating={dayRatings[habit.id]?.rating ?? 0}
             note={dayRatings[habit.id]?.note ?? ''}
+            streak={calculateStreak(habit.id, logs)}
             onRatingChange={r => handleRatingChange(habit.id, r)}
             onNoteChange={n => handleNoteChange(habit.id, n)}
           />
