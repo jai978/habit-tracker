@@ -18,8 +18,11 @@ export default async function handler(req, res) {
   }
 
   // Protect against random web requests in production
+  // Allow direct browser access if ?secret= query param matches CRON_SECRET
   const authHeader = req.headers.authorization
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const querySecret = req.query.secret
+  const validAuth = authHeader === `Bearer ${process.env.CRON_SECRET}` || querySecret === process.env.CRON_SECRET
+  if (process.env.NODE_ENV === 'production' && !validAuth) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
