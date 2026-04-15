@@ -1,6 +1,6 @@
 /**
  * Vercel Serverless Function — triggered daily by Vercel Cron (see vercel.json).
- * Fetches today's habits from Supabase and emails a check-in form via Resend.
+ * Fetches habits from Supabase and sends a check-in email with one-click rating links.
  */
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
@@ -13,7 +13,6 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
-  // Allow manual trigger via GET, but only Vercel Cron sends the auth header in production
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -35,53 +34,89 @@ export default async function handler(req, res) {
   }
 
   if (!habits || habits.length === 0) {
-    return res.status(200).json({ message: 'No habits to check in' })
+    return res.status(200).json({ message: 'No habits configured' })
   }
 
+  const tz = process.env.TIMEZONE || 'Pacific/Auckland'
+  const appUrl = process.env.APP_URL
+
   const today = new Date().toLocaleDateString('en-NZ', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    timeZone: process.env.TIMEZONE || 'Pacific/Auckland',
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz,
   })
 
-  const habitLines = habits.map(h => `${h.name}: `).join('\n')
+  // ISO date in the configured timezone
+  const date = new Date().toLocaleDateString('en-CA', { timeZone: tz })
 
-  const textBody = `Hi! How did today go?
+  // Build one row of buttons per habit
+  const habitRows = habits.map(habit => {
+    const encodedName = encodeURIComponent(habit.name)
 
-Reply with a rating (0–5) for each habit. Add a note after a pipe | if you like.
+    const buttons = [0, 1, 2, 3, 4, 5].map(stars => {
+      const url = `${appUrl}/api/log?habit_id=${habit.id}&stars=${stars}&date=${date}&name=${encodedName}`
+      const label = stars === 0 ? 'Skip' : '★'.repeat(stars)
+      const bg = stars === 0 ? '#374151' : '#1d4ed8'
+      return `<a href="${url}" style="display:inline-block;margin:0 4px;padding:8px 14px;background:${bg};color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600">${label}</a>`
+    }).join('')
 
-${habitLines}
+    return `
+      <tr>
+        <td style="padding:14px 0 6px;color:#f9fafb;font-size:16px;font-weight:600">${habit.name}</td>
+      </tr>
+      <tr>
+        <td style="padding-bottom:20px">${buttons}</td>
+      </tr>`
+  }).join('')
 
----
-Format: HabitName: rating
-        HabitName: rating | optional note
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;padding:40px 0">
+    <tr>
+      <td align="center">
+        <table width="520" cellpadding="0" cellspacing="0" style="background:#1f2937;border-radius:12px;padding:32px 40px;max-width:520px;width:90%">
+          <tr>
+            <td style="color:#9ca3af;font-size:13px;padding-bottom:4px">DAILY CHECK-IN</td>
+          </tr>
+          <tr>
+            <td style="color:#f9fafb;font-size:22px;font-weight:700;padding-bottom:24px;border-bottom:1px solid #374151">${today}</td>
+          </tr>
+          <tr>
+            <td style="padding-top:8px">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                ${habitRows}
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-top:16px;border-top:1px solid #374151">
+              <p style="color:#6b7280;font-size:12px;margin:12px 0 0">
+                ★ = 1 poor &nbsp;·&nbsp; ★★ = 2 &nbsp;·&nbsp; ★★★ = 3 okay &nbsp;·&nbsp; ★★★★ = 4 good &nbsp;·&nbsp; ★★★★★ = 5 great
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
 
-Example:
-Exercise: 4 | morning run
-Water: 5
-Sleep: 3 | went to bed late
-
-Ratings: 0 = skipped, 1–2 = poor, 3 = okay, 4 = good, 5 = great
-`
-
-  const htmlBody = `
-<p>Hi! How did today go?</p>
-<p>Reply with a rating (0–5) for each habit. Add a note after a <code>|</code> if you like.</p>
-<pre style="font-family:monospace;background:#f4f4f4;padding:12px;border-radius:4px;line-height:1.8">${habitLines}</pre>
-<hr/>
-<p style="color:#666;font-size:13px">
-  Format: <code>HabitName: rating</code> or <code>HabitName: rating | note</code><br/>
-  Example: <code>Exercise: 4 | morning run</code><br/>
-  Ratings: 0 = skipped &nbsp; 1–2 = poor &nbsp; 3 = okay &nbsp; 4 = good &nbsp; 5 = great
-</p>
-`
+  const text = habits.map(habit => {
+    const links = [0,1,2,3,4,5].map(stars => {
+      const label = stars === 0 ? 'Skip' : `${stars}★`
+      const url = `${appUrl}/api/log?habit_id=${habit.id}&stars=${stars}&date=${date}&name=${encodeURIComponent(habit.name)}`
+      return `  ${label}: ${url}`
+    }).join('\n')
+    return `${habit.name}\n${links}`
+  }).join('\n\n')
 
   const { error: sendError } = await resend.emails.send({
     from: process.env.FROM_EMAIL,
     to: process.env.TO_EMAIL,
     subject: `Habit check-in — ${today}`,
-    text: textBody,
-    html: htmlBody,
-    replyTo: process.env.INBOUND_EMAIL,
+    html,
+    text,
   })
 
   if (sendError) {
