@@ -4,13 +4,17 @@
  */
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).send('Method not allowed')
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).send('Missing Supabase environment variables.')
+  }
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
 
   const tz = process.env.TIMEZONE || 'Pacific/Auckland'
   const date = req.query.date || new Date().toLocaleDateString('en-CA', { timeZone: tz })
