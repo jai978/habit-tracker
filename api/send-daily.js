@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       const url = `${appUrl}/api/log?habit_id=${habit.id}&stars=${stars}&date=${date}&name=${encodedName}`
       const label = stars === 0 ? 'Skip' : '★'.repeat(stars)
       const bg = stars === 0 ? '#374151' : '#1d4ed8'
-      return `<a href="${url}" style="display:inline-block;margin:0 4px;padding:8px 14px;background:${bg};color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600">${label}</a>`
+      return `<a href="${url}" target="_blank" style="display:inline-block;margin:0 4px;padding:8px 14px;background:${bg};color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600">${label}</a>`
     }).join('')
 
     return `
