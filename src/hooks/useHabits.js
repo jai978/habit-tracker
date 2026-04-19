@@ -18,10 +18,10 @@ export function useHabits() {
       })
   }, [])
 
-  async function addHabit(name) {
+  async function addHabit(name, type = 'rating') {
     const trimmed = name.trim()
     if (!trimmed) return
-    const habit = { id: generateId(), name: trimmed, created_at: getTodayISO() }
+    const habit = { id: generateId(), name: trimmed, type, created_at: getTodayISO() }
     const { error } = await supabase.from('habits').insert(habit)
     if (!error) setHabits(prev => [...prev, habit])
   }
@@ -33,10 +33,15 @@ export function useHabits() {
     if (!error) setHabits(prev => prev.map(h => h.id === id ? { ...h, name: trimmed } : h))
   }
 
+  async function updateHabitType(id, type) {
+    const { error } = await supabase.from('habits').update({ type }).eq('id', id)
+    if (!error) setHabits(prev => prev.map(h => h.id === id ? { ...h, type } : h))
+  }
+
   async function deleteHabit(id) {
     const { error } = await supabase.from('habits').delete().eq('id', id)
     if (!error) setHabits(prev => prev.filter(h => h.id !== id))
   }
 
-  return { habits, loading, addHabit, renameHabit, deleteHabit }
+  return { habits, loading, addHabit, renameHabit, updateHabitType, deleteHabit }
 }

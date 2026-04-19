@@ -4,8 +4,12 @@
 create table public.habits (
   id         text primary key,
   name       text not null,
+  type       text not null default 'rating' check (type in ('rating', 'boolean')),
   created_at date not null default current_date
 );
+
+-- Migration: if the habits table already exists, run this instead:
+-- alter table public.habits add column if not exists type text not null default 'rating' check (type in ('rating', 'boolean'));
 
 -- Habit logs: one row per (habit, date) pair
 create table public.habit_logs (

@@ -1,4 +1,5 @@
 import StarRating from './StarRating.jsx'
+import YesNoRating from './YesNoRating.jsx'
 import NoteField from './NoteField.jsx'
 
 export default function HabitRatingRow({ habit, rating, note, streak, onRatingChange, onNoteChange }) {
@@ -13,7 +14,10 @@ export default function HabitRatingRow({ habit, rating, note, streak, onRatingCh
             </span>
           )}
         </div>
-        <StarRating value={rating} onChange={onRatingChange} />
+        {habit.type === 'boolean'
+          ? <YesNoRating value={rating} onChange={onRatingChange} />
+          : <StarRating value={rating} onChange={onRatingChange} />
+        }
       </div>
       <NoteField value={note} onChange={onNoteChange} />
     </div>

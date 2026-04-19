@@ -30,7 +30,7 @@ function buildCells(dates) {
 // Which day label rows to show (Mon, Wed, Fri)
 const SHOW_LABEL = [true, false, true, false, true, false, false]
 
-export default function HeatmapGrid({ habitId, logs, dates }) {
+export default function HeatmapGrid({ habitId, logs, dates, habitType }) {
   const cells = buildCells(dates)
   const numCols = cells.length / 7
 
@@ -66,6 +66,7 @@ export default function HeatmapGrid({ habitId, logs, dates }) {
                 date={cell.date}
                 rating={logs[cell.date]?.[habitId]?.rating ?? 0}
                 note={logs[cell.date]?.[habitId]?.note ?? ''}
+                habitType={habitType ?? 'rating'}
               />
             )
           )}

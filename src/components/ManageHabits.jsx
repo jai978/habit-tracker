@@ -3,12 +3,13 @@ import { useHabitContext } from '../context/HabitContext.jsx'
 import HabitListItem from './HabitListItem.jsx'
 
 export default function ManageHabits({ onBack }) {
-  const { habits, addHabit, renameHabit, deleteHabit } = useHabitContext()
+  const { habits, addHabit, renameHabit, deleteHabit, updateHabitType } = useHabitContext()
   const [newName, setNewName] = useState('')
+  const [newType, setNewType] = useState('rating')
 
   function handleAdd() {
     if (newName.trim()) {
-      addHabit(newName.trim())
+      addHabit(newName.trim(), newType)
       setNewName('')
     }
   }
@@ -33,7 +34,7 @@ export default function ManageHabits({ onBack }) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-3">
           <input
             type="text"
             value={newName}
@@ -50,6 +51,23 @@ export default function ManageHabits({ onBack }) {
             Add
           </button>
         </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-500 mr-1">Type:</span>
+          <button
+            type="button"
+            onClick={() => setNewType('rating')}
+            className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${newType === 'rating' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-300 hover:border-indigo-400'}`}
+          >
+            ★ Rating
+          </button>
+          <button
+            type="button"
+            onClick={() => setNewType('boolean')}
+            className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${newType === 'boolean' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-300 hover:border-indigo-400'}`}
+          >
+            ✓ Yes/No
+          </button>
+        </div>
       </div>
 
       {habits.length === 0 ? (
@@ -62,6 +80,7 @@ export default function ManageHabits({ onBack }) {
               habit={habit}
               onRename={renameHabit}
               onDelete={deleteHabit}
+              onChangeType={updateHabitType}
             />
           ))}
         </div>

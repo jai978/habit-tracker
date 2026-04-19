@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ConfirmDialog from './ConfirmDialog.jsx'
 
-export default function HabitListItem({ habit, onRename, onDelete }) {
+export default function HabitListItem({ habit, onRename, onDelete, onChangeType }) {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(habit.name)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -37,6 +37,14 @@ export default function HabitListItem({ habit, onRename, onDelete }) {
         ) : (
           <>
             <span className="flex-1 text-sm text-gray-800">{habit.name}</span>
+            <button
+              type="button"
+              onClick={() => onChangeType(habit.id, habit.type === 'boolean' ? 'rating' : 'boolean')}
+              title={`Switch to ${habit.type === 'boolean' ? 'star rating' : 'yes/no'}`}
+              className="text-xs px-2 py-0.5 rounded border border-gray-200 text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors shrink-0"
+            >
+              {habit.type === 'boolean' ? '✓ Yes/No' : '★ Rating'}
+            </button>
             <button
               onClick={() => { setEditName(habit.name); setEditing(true) }}
               className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"

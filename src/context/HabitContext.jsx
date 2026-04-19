@@ -5,7 +5,7 @@ import { useLogs } from '../hooks/useLogs.js'
 const HabitContext = createContext(null)
 
 export function HabitProvider({ children }) {
-  const { habits, loading: habitsLoading, addHabit, renameHabit, deleteHabit: _deleteHabit } = useHabits()
+  const { habits, loading: habitsLoading, addHabit, renameHabit, updateHabitType, deleteHabit: _deleteHabit } = useHabits()
   const { logs, loading: logsLoading, getLogForDate, saveDay, deleteHabitLogs } = useLogs()
 
   const loading = habitsLoading || logsLoading
@@ -16,7 +16,7 @@ export function HabitProvider({ children }) {
   }
 
   return (
-    <HabitContext.Provider value={{ habits, logs, loading, addHabit, renameHabit, deleteHabit, getLogForDate, saveDay }}>
+    <HabitContext.Provider value={{ habits, logs, loading, addHabit, renameHabit, updateHabitType, deleteHabit, getLogForDate, saveDay }}>
       {children}
     </HabitContext.Provider>
   )

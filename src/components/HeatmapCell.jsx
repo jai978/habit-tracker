@@ -10,12 +10,23 @@ const RATING_COLORS = {
   5: 'bg-indigo-700',
 }
 
-export default function HeatmapCell({ date, rating, note, isEmpty }) {
+const BOOLEAN_COLORS = {
+  0: 'bg-gray-100',
+  1: 'bg-red-200',
+  5: 'bg-green-500',
+}
+
+export default function HeatmapCell({ date, rating, note, isEmpty, habitType }) {
   const [hovered, setHovered] = useState(false)
 
   if (isEmpty) {
     return <div className="w-3.5 h-3.5" />
   }
+
+  const r = rating ?? 0
+  const colorClass = habitType === 'boolean'
+    ? (BOOLEAN_COLORS[r] ?? 'bg-gray-100')
+    : (RATING_COLORS[r] ?? 'bg-gray-100')
 
   return (
     <div
@@ -23,10 +34,8 @@ export default function HeatmapCell({ date, rating, note, isEmpty }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div
-        className={`w-3.5 h-3.5 rounded-sm cursor-default ${RATING_COLORS[rating ?? 0]}`}
-      />
-      <Tooltip date={date} rating={rating ?? 0} note={note ?? ''} visible={hovered} />
+      <div className={`w-3.5 h-3.5 rounded-sm cursor-default ${colorClass}`} />
+      <Tooltip date={date} rating={r} note={note ?? ''} visible={hovered} habitType={habitType} />
     </div>
   )
 }

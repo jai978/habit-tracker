@@ -36,6 +36,7 @@ export default function CombinedHabitGrid({ habits, logs, year, month }) {
                   date={iso}
                   rating={logs[iso]?.[habit.id]?.rating ?? 0}
                   note={logs[iso]?.[habit.id]?.note ?? ''}
+                  habitType={habit.type ?? 'rating'}
                 />
               )
             })}
