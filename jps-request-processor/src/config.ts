@@ -81,7 +81,10 @@ export function loadConfig() {
 
     ai: {
       apiKey: optional('ANTHROPIC_API_KEY'),
-      model: str('ANTHROPIC_MODEL', 'claude-opus-5'),
+      // Haiku 4.5: fast and cheap, and classification / templated prompt
+      // writing don't need Opus-tier reasoning. Override with ANTHROPIC_MODEL
+      // if a client's requests turn out to need more careful interpretation.
+      model: str('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
       effort: effort as 'low' | 'medium' | 'high' | 'xhigh' | 'max',
       maxTokens: int('AI_MAX_TOKENS', 8000),
       /** Wall-clock budget for a single AI call. */

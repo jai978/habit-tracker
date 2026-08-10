@@ -70,7 +70,8 @@ Every setting is documented inline in `.env.example`. The ones worth a decision:
 | Setting | Why you would change it |
 | --- | --- |
 | `MESSAGE_DEBOUNCE_MS` | How long a client must stop typing before their burst is treated as finished. 60s by default. |
-| `AI_EFFORT` | `low` through `max`. `medium` is a good balance; raise it if interpretation quality matters more than cost. |
+| `ANTHROPIC_MODEL` | `claude-haiku-4-5` by default. Switch to `claude-opus-5` or `claude-sonnet-5` if a client's messages need more careful interpretation than Haiku gives. |
+| `AI_EFFORT` | `low` through `max`. Ignored on Haiku models, which don't accept this parameter. |
 | `CONFIDENCE_THRESHOLD` | Below this, a change request is held for clarification instead of marked ready. |
 | `STORE_DRIVER` | `sqlite` (default) or `supabase` — see Deployment. |
 | `NOTIFY_POSSIBLE_CHANGE` | Turn off if ambiguous messages are noisy on Telegram. |

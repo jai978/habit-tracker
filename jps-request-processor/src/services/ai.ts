@@ -41,6 +41,11 @@ export class InvalidAiOutputError extends Error {
   }
 }
 
+/** Haiku models reject the `effort` parameter outright; every other current model accepts it. */
+export function supportsEffort(model: string): boolean {
+  return !model.includes('haiku');
+}
+
 function firstText(content: Anthropic.ContentBlock[]): string {
   for (let index = content.length - 1; index >= 0; index -= 1) {
     const block = content[index];
@@ -62,7 +67,7 @@ export function createAiService(config: Config, logger: Logger): AiService {
       max_tokens: config.ai.maxTokens,
       system: CLASSIFY_SYSTEM_PROMPT,
       output_config: {
-        effort: config.ai.effort,
+        ...(supportsEffort(config.ai.model) ? { effort: config.ai.effort } : {}),
         // Structured outputs constrain the response to the schema, so the only
         // failures left to handle are semantic ones.
         format: { type: 'json_schema', schema: ANALYSIS_SCHEMA as unknown as Record<string, unknown> },
@@ -116,7 +121,9 @@ export function createAiService(config: Config, logger: Logger): AiService {
         model: config.ai.model,
         max_tokens: config.ai.maxTokens,
         system: LOVABLE_SYSTEM_PROMPT,
-        output_config: { effort: config.ai.effort },
+        ...(supportsEffort(config.ai.model)
+          ? { output_config: { effort: config.ai.effort } }
+          : {}),
         messages: [{ role: 'user', content: buildLovableInput(clientRecord, analysis, messages) }],
       });
 
